@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://camel.apache.org/schema/spring       http://camel.apache.org/schema/spring/camel-spring.xsd">
+
+    <camelContext id="context-3aeb56c8-dac5-4746-acad-436e15a52d10" xmlns="http://camel.apache.org/schema/spring">
+
+        <onException>
+            <exception>java.lang.Exception</exception>
+            <handled><constant>true</constant></handled>
+            <setHeader headerName="Exchange.HTTP_RESPONSE_CODE">
+                <constant>500</constant>
+            </setHeader>
+            <setBody>
+                <simple>${exception.message}</simple>
+            </setBody>
+        </onException>
+
+        <rest id="rest-for-openapi-document" path="/" enableCORS="true">
+            <get id="openapi.json" produces="application/json" uri="openapi.json">
+                <description>Gets the OpenAPI document for this service</description>
+                <route id="route-for-openapi-document">
+                    <setHeader id="setHeader-for-openapi-document" headerName="Exchange.CONTENT_TYPE">
+                        <constant>application/vnd.oai.openapi+json</constant>
+                    </setHeader>
+                    <setBody id="setBody-for-openapi-document">
+                        <constant>resource:classpath:openapi.json</constant>
+                    </setBody>
+                </route>
+            </get>
+        </rest>
+
+        <rest bindingMode="json" enableCORS="true" id="rest-4b451ac6-68ca-41cd-95b4-9f8e18c60c99"/>
+
+
+        <route id="route-for-unimplemented-operations">
+            <from id="from-for-unimplemented-operations-route" uri="direct:501"/>
+            <log id="log-for-unimplemented-operations-route" message="API operation not yet implemented: ${headers.CamelHttpMethod} ${headers.CamelHttpPath}"/>
+            <setHeader id="setHeader-for-unimplemented-operations-route" headerName="Exchange.HTTP_RESPONSE_CODE">
+                <constant>501</constant>
+            </setHeader>
+            <setBody id="setBody-for-unimplemented-operations-route">
+                <simple>API operation not implemented: ${headers.CamelHttpMethod} ${headers.CamelHttpPath}</simple>
+            </setBody>
+        </route>
+
+    </camelContext>
+</beans>
